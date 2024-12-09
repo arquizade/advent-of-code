@@ -6,17 +6,15 @@ const lines = inputStr.split('\n');
 
 let safeCtr = 0;
 let unsafeCtr = 0;
-let tempRemove = [];
-let tempRemoveCtr = 0;
 
 lines.forEach(function(str) {
     let level = str.split(/\s+/);
-    checkSafety(level);
+    let tempCheckSafe = checkSafety(level);
+    tempCheckSafe ? safeCtr++ : unsafeCtr++;
 });
 
-function checkSafety(data, checkCounts = true)
+function isSafe(data)
 {
-    let isResult = '';
     let tempSign = [];
     let tempData = data;
     let calcResults = [];
@@ -28,9 +26,7 @@ function checkSafety(data, checkCounts = true)
 
         let sign = calc > 0 ? "decrease" : calc < 0 ? "increase" : "zero";
 
-        if (!checkCounts) {
-            console.log([ tempData[nextCtr - 1],  tempData[nextCtr]], ' = ' + calc, ' : ' + sign);
-        }
+        // console.log([ tempData[nextCtr - 1],  tempData[nextCtr]], ' = ' + calc, ' : ' + sign);
 
         tempSign.push(sign);
     }
@@ -47,54 +43,37 @@ function checkSafety(data, checkCounts = true)
 
     if (signResultCount > 2) {
         isValid = false;
-    }
-    
-    if ('zero' in itemCounts) {
+    } else if ('zero' in itemCounts) {
         isValid = false;
-    }
-    
-    if (calcResults.some(num => num >= 4)) {
+    } else if (calcResults.some(num => num >= 4)) {
         isValid = false;
-    }
-    
-    if (signResultCount == 2) {
+    } else if (signResultCount == 2) {
         isValid = false;
     }
 
-    // console.log(checkCounts);
+    // console.log('safe:', isValid, 'items:', itemCounts);
+    // console.log('------------------------------------------------');
 
-    if (checkCounts && signResultCount == 2 && (itemCounts['decrease'] == 1 || itemCounts['increase'] == 1 || itemCounts['zero'] == 1))
-    {
-        let keyValue = '';
-        if (itemCounts['decrease'] == 1) { keyValue = 'decrease'; }
-        if (itemCounts['increase'] == 1) { keyValue = 'increase'; }
-        if (itemCounts['zero'] == 1) { keyValue = 'zero'; }
-
-        let index = tempSign.indexOf(keyValue);
-        if (index !== -1) {
-            tempData.splice(index, 1);
-            tempRemove.push(tempData);
-            tempRemoveCtr++;
-            return;
-        }
-    }
-    
-    if (!checkCounts) {
-
-        console.log('safe:', isValid, 'items:', itemCounts);
-
-        console.log('------------------------------------------------');
-    }
-
-    isValid ? safeCtr++ : unsafeCtr++;
+    return isValid;
 }
 
-tempRemove.forEach(function(level) {
-    checkSafety(level, false);
-});
+function checkSafety(level)
+{
+    if (isSafe(level)) {
+        return true;
+    }
+    
+    for (let i = 0; i < level.length; i++) {
+        let newLevel = [...level.slice(0, i), ...level.slice(i + 1)];
+        if (isSafe(newLevel)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 console.log({
-    remove_count: tempRemoveCtr,
     safe: safeCtr,
     unsafe: unsafeCtr
 });
